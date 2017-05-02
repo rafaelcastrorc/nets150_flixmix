@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/nets150_flixmix.iml" filepath="$PROJECT_DIR$/nets150_flixmix.iml" />
+      <module fileurl="file://$PROJECT_DIR$/src/nets150_flixmix.iml" filepath="$PROJECT_DIR$/src/nets150_flixmix.iml" />
     </modules>
   </component>
 </project>
