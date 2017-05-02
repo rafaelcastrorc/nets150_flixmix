@@ -4,6 +4,7 @@ import java.util.*;
 
 /**
  * Created by rafaelcastro on 4/11/17.
+ * Using Triadic closure, and membership closure, creates a graph and gives movie recommendations
  */
  class ComputationsForTC {
     Graph<String> graph;
@@ -16,7 +17,7 @@ import java.util.*;
 
 
     /**
-     * Method constructor. Generates the graph based on the data collected by the Parser
+     * Class constructor. Generates the graph based on the data collected by the Parser
      * @param movies
      * @param ratings
      *
@@ -27,15 +28,14 @@ import java.util.*;
         this.movies = movies;
         this.ratings = ratings;
         createGraph();
-        getFavoriteMoviesOfUser("u2");
+        System.out.println(getFavoriteMoviesOfUser("u2"));
         System.out.println(getAllPossibleSuggestion("m2"));
     }
 
 
     /**
-     * Generates a weighted directed graph. Maps userID to movieID
+     * Generates a weighted directed graph.
      */
-
 
     private void createGraph() {
         for (String userID : ratings.keySet()) {
@@ -66,12 +66,21 @@ import java.util.*;
     }
 
 
-
-
+    /**
+     * Adds a MovieRatingObj to a collection that stores all MovieRating objects
+     * @param movieID
+     * @param movieRatingObj - MovieRating object that wants to be added
+     */
     private void addMovieRatingToMap(String movieID, MovieRating movieRatingObj) {
         ratedMovies.put(movieID, movieRatingObj);
 
     }
+
+    /**
+     * Gets the MovieRating object of the given movieID
+     * @param movieID
+     * @return MovieRating object or null if there is no such object
+     */
     private MovieRating getMovieRatingObj(String movieID) {
        return ratedMovies.get(movieID);
     }
@@ -80,7 +89,12 @@ import java.util.*;
     //Todo: Do suggestions based on the user instead of a single movie
 
     //If a movie really liked the given movie, gets other users who also liked the movie and the movies they like
-    //Todo avoid including the user who requested the info and the curr movie
+
+    /**
+     * Based on a movie that a user likes, get other movies of any genre that users who like this movie also like.
+     * @param movieID - Movie that the user likes
+     * @return ArrayList with movie recommendations, sorted in descending order based on popularity among other users
+     */
     protected ArrayList<String> getAllPossibleSuggestion(String movieID) {
         MovieRating movieRating = getMovieRatingObj(movieID);
         TreeSet<String> orderedUsers;
@@ -102,7 +116,13 @@ import java.util.*;
         return  getSortedListOfMovies(numOfUsersWhoLikedItToMovie);
     }
 
-    //Helper method that returns all possible movie suggestions
+    /**
+     * Helper method that sorts the results based on popularity among users.
+     * @param map
+     * @return sorted list of movie suggestions.
+     */
+
+
     private ArrayList<String> getSortedListOfMovies(HashMap<String, Integer> map) {
         TreeMap<Integer, Set<String>>  orderedMap = new TreeMap<>(Collections.reverseOrder());
         for (String movieID : map.keySet()) {
@@ -129,7 +149,11 @@ import java.util.*;
         return result;
     }
 
-    //Gets the favorite movies of the user, in descending order (rated 4.0 or above)
+    /**
+     * Gets all the movies that the user rated 4.0 and above.
+     * @param userID
+     * @return List of the favorite movies of the user, in descending order
+     */
     private ArrayList<String> getFavoriteMoviesOfUser(String userID) {
         Set<String> moviesRatedByUser = graph.outNeighbors(userID);
         TreeMap<Double, Set<String>>  ratingToMovieID = new TreeMap<>(Collections.reverseOrder());
@@ -162,7 +186,9 @@ import java.util.*;
     }
 
 
-
+    /**
+     * MovieRating object. Each movieID has a movie rating obj, that stores all users who have rated the given movie
+     */
 
     class MovieRating {
         private String movieID;
@@ -172,6 +198,11 @@ import java.util.*;
             this.movieID = movieID;
         }
 
+        /**
+         * Add a new user rating to the given movie.
+         * @param userID
+         * @param rating - Double
+         */
         protected void addNewRating(String userID, Double rating) {
             if (!ratingToUser.containsKey(rating)) {
                 Set<String> users = new TreeSet<>();
@@ -187,7 +218,10 @@ import java.util.*;
 
         }
 
-        //Get all the users who rated highly the movie (4 and above)
+        /**
+         * Gets all users who are strongly connected to the movie. That is, that they have rated the movie 4.0 or above
+         * @return Ordered Set of users who like the movie, in descending order
+         */
         protected TreeSet<String> getStronglyConnectedUsers () {
             TreeSet<String> users = new TreeSet<>(Collections.reverseOrder());
             for (Double rating : ratingToUser.keySet()) {
