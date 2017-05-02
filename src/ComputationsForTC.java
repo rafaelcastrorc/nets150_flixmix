@@ -5,30 +5,36 @@ import java.util.*;
  * Using Triadic closure, and membership closure, creates a graph and gives movie recommendations
  */
  class ComputationsForTC {
-    Graph<String> graph;
+    private Graph<String> graph;
     //All movies with the users who rated them
     private HashMap<String, MovieRating> ratedMovies = new HashMap<>();
-    // movieID -> Map.Entry={movie title, list of genres}
-    private HashMap<String, Map.Entry<String, List<String>>> movies;
     // userID -> List<Entry={movieID, rating by user}>
     private  HashMap<String, List<Map.Entry<String, Double>>> ratings;
 
 
     /**
      * Class constructor. Generates the graph based on the data collected by the Parser
-     * @param movies
-     * @param ratings
+     * @param ratings  - Rating hashmap obtained from the parser
      *
      */
 
-    ComputationsForTC(HashMap<String, Map.Entry<String, List<String>>> movies, HashMap<String, List<Map.Entry<String, Double>>> ratings) {
+    ComputationsForTC(HashMap<String, List<Map.Entry<String, Double>>> ratings) {
         this.graph = new Graph<>();
-        this.movies = movies;
         this.ratings = ratings;
+
         createGraph();
+        System.out.println("Graph created");
+        System.out.println(System.currentTimeMillis());
+
+        System.out.println("Results");
+
+
+
         System.out.println(getFavoriteMoviesOfUser("u1"));
         System.out.println(getAllPossibleSuggestion("m4", true));
         System.out.println(getSuggestionsBasedOnGenre("m4"));
+        System.out.println(System.currentTimeMillis());
+
 
     }
 
@@ -68,7 +74,7 @@ import java.util.*;
 
     /**
      * Adds a MovieRatingObj to a collection that stores all MovieRating objects
-     * @param movieID
+     * @param movieID - the id of the movie you are looking for
      * @param movieRatingObj - MovieRating object that wants to be added
      */
     private void addMovieRatingToMap(String movieID, MovieRating movieRatingObj) {
@@ -78,7 +84,7 @@ import java.util.*;
 
     /**
      * Gets the MovieRating object of the given movieID
-     * @param movieID
+     * @param movieID - id of the movie you are looking for
      * @return MovieRating object or null if there is no such object
      */
     private MovieRating getMovieRatingObj(String movieID) {
@@ -172,8 +178,8 @@ import java.util.*;
 
     /**
      * Helper method that sorts the results based on popularity among users.
-     * @param map
-     * @param getMovieNames
+     * @param map - Map with movies to number of users who liked the movie
+     * @param getMovieNames - if true,  gets the names of the movies, instead of their movieIDs
      * @return sorted list of movie suggestions.
      */
     private ArrayList<String> getSortedListOfMovies(HashMap<String, Integer> map, boolean getMovieNames) {
@@ -191,7 +197,7 @@ import java.util.*;
                 orderedMap.put(curr, movies);
             }
             else {
-                Set currMovies = orderedMap.get(curr);
+                Set<String> currMovies = orderedMap.get(curr);
                 if (getMovieNames) {
                     currMovies.add(TriadicClosureParser.getMovieTitle(movieID));
                 }
@@ -206,16 +212,14 @@ import java.util.*;
         }
         ArrayList<String> result = new ArrayList<>();
         for (Set<String> movies : orderedMap.values()) {
-            for (String movie : movies) {
-                result.add(movie);
-            }
+            result.addAll(movies);
         }
         return result;
     }
 
     /**
      * Gets all the movies that the user rated 4.0 and above.
-     * @param userID
+     * @param userID - User we want to get favorite movies from
      * @return List of the favorite movies of the user, in descending order
      */
     private ArrayList<String> getFavoriteMoviesOfUser(String userID) {
@@ -223,26 +227,25 @@ import java.util.*;
         TreeMap<Double, Set<String>>  ratingToMovieID = new TreeMap<>(Collections.reverseOrder());
 
         for (String movieID : moviesRatedByUser) {
-            Double userRating = TriadicClosureParser.getRatingOfMovie(userID, movieID);
+            Double userRating;
+            userRating = TriadicClosureParser.getRatingOfMovie(userID, movieID);
             if (userRating >= 4.0) {
                 ratingToMovieID = doubleToStringMapHelper(ratingToMovieID, userRating, movieID);
             }
         }
         ArrayList<String> result = new ArrayList<>();
         for (Set<String> movies : ratingToMovieID.values()) {
-            for (String movie : movies) {
-                result.add(movie);
-            }
+            result.addAll(movies);
         }
         return result;
     }
 
     /**
      * Helper method to add elements to a map that maps ratings to a set of movies or users
-     * @param map
-     * @param rating
+     * @param map - Map we want to add the information to
+     * @param rating - rating we want to add
      * @param id - userID or movieID
-     * @return
+     * @return TreeMap
      */
     private TreeMap<Double, Set<String>> doubleToStringMapHelper(TreeMap<Double, Set<String>> map, double rating, String id ) {
 
@@ -252,7 +255,7 @@ import java.util.*;
             map.put(rating, movies);
         }
         else {
-            Set movies = map.get(rating);
+            Set<String> movies = map.get(rating);
             movies.add(id);
             map.put(rating, movies);
 
@@ -277,10 +280,10 @@ import java.util.*;
 
         /**
          * Add a new user rating to the given movie.
-         * @param userID
+         * @param userID - user that rated the movie
          * @param rating - Double
          */
-        protected void addNewRating(String userID, Double rating) {
+        void addNewRating(String userID, Double rating) {
             doubleToStringMapHelper(ratingToUser, rating, userID);
         }
 
@@ -288,13 +291,11 @@ import java.util.*;
          * Gets all users who are strongly connected to the movie. That is, that they have rated the movie 4.0 or above
          * @return Ordered Set of users who like the movie, in descending order
          */
-        protected TreeSet<String> getStronglyConnectedUsers () {
+        TreeSet<String> getStronglyConnectedUsers() {
             TreeSet<String> users = new TreeSet<>(Collections.reverseOrder());
             for (Double rating : ratingToUser.keySet()) {
                 if (rating >= 4.0) {
-                    for (String user : ratingToUser.get(rating)) {
-                        users.add(user);
-                    }
+                    users.addAll(ratingToUser.get(rating));
 
                 }
             }

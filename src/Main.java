@@ -6,6 +6,8 @@ public class Main {
     public static void main(String[] args) {
 
         //For triadic closure computing only
+        System.out.println("Starting program");
+        System.out.println(System.currentTimeMillis());
 
         if (args.length != 2) {
             System.out.println("usage is: ");
@@ -15,7 +17,12 @@ public class Main {
         }
         TriadicClosureParser.parseMovies(args[0]);
         TriadicClosureParser.parseRatings(args[1]);
-        ComputationsForTC model = new ComputationsForTC(TriadicClosureParser.getMovies(), TriadicClosureParser.getRatings());
+        System.out.println("Parsing done");
+        System.out.println(System.currentTimeMillis());
+
+
+
+        ComputationsForTC model = new ComputationsForTC(TriadicClosureParser.getRatings());
     }
 
 }
