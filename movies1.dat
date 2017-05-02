@@ -1,3 +1,5 @@
-1::Movie 1 (1995)::Adventure|Animation|Children|Comedy|Fantasy
-2::Movie 2 (1995)::Adventure|Children|Fantasy
-3::Movie 3 (1995)::Adventure|Children|Fantasy
+1::Movie 1 (1995)::Adventure|Animation|Children
+2::Movie 2 (1995)::Adventure|Horror
+3::Movie 3 (1995)::Horror
+4::Movie 4 (1995)::Fantasy
+5::Movie 5 (1995)::Children|Animation

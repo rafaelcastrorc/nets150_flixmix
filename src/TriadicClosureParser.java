@@ -1,12 +1,6 @@
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 class TriadicClosureParser {
 
@@ -133,5 +127,10 @@ class TriadicClosureParser {
        return movies.get(movieID).getKey();
 
    }
+
+    protected static List<String> getMovieCategory(String movieID) {
+        return movies.get(movieID).getValue();
+
+    }
 
 }

@@ -1,5 +1,3 @@
-import com.sun.tools.corba.se.idl.InterfaceGen;
-
 import java.util.*;
 
 /**
@@ -28,8 +26,10 @@ import java.util.*;
         this.movies = movies;
         this.ratings = ratings;
         createGraph();
-        System.out.println(getFavoriteMoviesOfUser("u2"));
-        System.out.println(getAllPossibleSuggestion("m2"));
+        System.out.println(getFavoriteMoviesOfUser("u1"));
+        System.out.println(getAllPossibleSuggestion("m4", true));
+        System.out.println(getSuggestionsBasedOnGenre("m4"));
+
     }
 
 
@@ -85,17 +85,71 @@ import java.util.*;
        return ratedMovies.get(movieID);
     }
 
-    //Todo: do suggestions based on genre
-    //Todo: Do suggestions based on the user instead of a single movie
+
+    /**
+     * Limits the output to just the top n results
+     * @param list - list that contains the result.
+     * @param n - number of results that you want to display
+     * @return ArrayList with n movie recommendations, sorted in descending order based on popularity among other users
+     */
+    protected ArrayList<String> getTopNResults(ArrayList<String> list, int n) {
+        ArrayList<String> result = new ArrayList<>();
+        int i = 0;
+        for (String item : list) {
+            if (i == n) {
+                break;
+            }
+            result.add(item);
+            i++;
+        }
+        return result;
+    }
+
+
+    /**
+     * Based on a movie that a user likes, get other movies (of the same genre) that users who like this movie also like.
+     * @param movieID - Movie that the user likes
+     * @return ArrayList with movie recommendations, sorted in descending order based on popularity among other users
+     */
+    protected ArrayList<String> getSuggestionsBasedOnGenre(String movieID) {
+        ArrayList<String> setOfMovies = getAllPossibleSuggestion(movieID, false);
+        List<String> genresList = TriadicClosureParser.getMovieCategory(movieID);
+        ArrayList<String> result = new ArrayList<>();
+
+
+        for (String movie : setOfMovies) {
+            List<String> genresListCurrMovie = TriadicClosureParser.getMovieCategory(movie);
+            for (String genre : genresList) {
+                if (genresListCurrMovie.contains(genre)) {
+                    result.add(TriadicClosureParser.getMovieTitle(movie));
+                    break;
+                }
+            }
+
+        }
+        return result;
+    }
+
+    /**
+     * Based on a user, find all movies that the user currently likes, and suggest new movies based on other users who also like the movies the user likes
+     * @param userID - id of the user
+     * @return ArrayList with movie recommendations, sorted in descending order based on popularity among other users
+     */
+    protected ArrayList<String> getSuggestionsBasedOnUser(String userID) {
+        //Todo: Do suggestions based on the user instead of a single movie
+        return null;
+    }
+
 
     //If a movie really liked the given movie, gets other users who also liked the movie and the movies they like
 
     /**
      * Based on a movie that a user likes, get other movies of any genre that users who like this movie also like.
      * @param movieID - Movie that the user likes
+     * @param getMovieNames - If true, return the list with the movie names rather than the movieIDs
      * @return ArrayList with movie recommendations, sorted in descending order based on popularity among other users
      */
-    protected ArrayList<String> getAllPossibleSuggestion(String movieID) {
+    protected ArrayList<String> getAllPossibleSuggestion(String movieID, boolean getMovieNames) {
         MovieRating movieRating = getMovieRatingObj(movieID);
         TreeSet<String> orderedUsers;
         orderedUsers = movieRating.getStronglyConnectedUsers();
@@ -113,28 +167,38 @@ import java.util.*;
             }
         }
 
-        return  getSortedListOfMovies(numOfUsersWhoLikedItToMovie);
+        return  getSortedListOfMovies(numOfUsersWhoLikedItToMovie, getMovieNames);
     }
 
     /**
      * Helper method that sorts the results based on popularity among users.
      * @param map
+     * @param getMovieNames
      * @return sorted list of movie suggestions.
      */
-
-
-    private ArrayList<String> getSortedListOfMovies(HashMap<String, Integer> map) {
+    private ArrayList<String> getSortedListOfMovies(HashMap<String, Integer> map, boolean getMovieNames) {
         TreeMap<Integer, Set<String>>  orderedMap = new TreeMap<>(Collections.reverseOrder());
         for (String movieID : map.keySet()) {
             int curr = map.get(movieID);
             if (!orderedMap.containsKey(curr)) {
                 Set<String> movies = new TreeSet<>();
-                movies.add(TriadicClosureParser.getMovieTitle(movieID));
+                if (getMovieNames) {
+                    movies.add(TriadicClosureParser.getMovieTitle(movieID));
+                }
+                else {
+                    movies.add(movieID);
+                }
                 orderedMap.put(curr, movies);
             }
             else {
                 Set currMovies = orderedMap.get(curr);
-                currMovies.add(TriadicClosureParser.getMovieTitle(movieID));
+                if (getMovieNames) {
+                    currMovies.add(TriadicClosureParser.getMovieTitle(movieID));
+                }
+                else {
+                    currMovies.add(movieID);
+
+                }
                 orderedMap.put(curr, currMovies);
 
             }
@@ -161,19 +225,7 @@ import java.util.*;
         for (String movieID : moviesRatedByUser) {
             Double userRating = TriadicClosureParser.getRatingOfMovie(userID, movieID);
             if (userRating >= 4.0) {
-
-                if (!ratingToMovieID.containsKey(userRating)) {
-                    Set<String> movies = new TreeSet<>();
-                    movies.add(movieID);
-                    ratingToMovieID.put(userRating, movies);
-                }
-                else {
-                    Set movies = ratingToMovieID.get(userRating);
-                    movies.add(movieID);
-                    ratingToMovieID.put(userRating, movies);
-
-                }
-
+                ratingToMovieID = doubleToStringMapHelper(ratingToMovieID, userRating, movieID);
             }
         }
         ArrayList<String> result = new ArrayList<>();
@@ -184,6 +236,31 @@ import java.util.*;
         }
         return result;
     }
+
+    /**
+     * Helper method to add elements to a map that maps ratings to a set of movies or users
+     * @param map
+     * @param rating
+     * @param id - userID or movieID
+     * @return
+     */
+    private TreeMap<Double, Set<String>> doubleToStringMapHelper(TreeMap<Double, Set<String>> map, double rating, String id ) {
+
+        if (!map.containsKey(rating)) {
+            Set<String> movies = new TreeSet<>();
+            movies.add(id);
+            map.put(rating, movies);
+        }
+        else {
+            Set movies = map.get(rating);
+            movies.add(id);
+            map.put(rating, movies);
+
+        }
+
+        return map;
+    }
+
 
 
     /**
@@ -204,18 +281,7 @@ import java.util.*;
          * @param rating - Double
          */
         protected void addNewRating(String userID, Double rating) {
-            if (!ratingToUser.containsKey(rating)) {
-                Set<String> users = new TreeSet<>();
-                users.add(userID);
-                ratingToUser.put(rating, users);
-            }
-            else {
-                Set currentUsers = ratingToUser.get(rating);
-                currentUsers.add(userID);
-                ratingToUser.put(rating, currentUsers);
-
-            }
-
+            doubleToStringMapHelper(ratingToUser, rating, userID);
         }
 
         /**
