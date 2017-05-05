@@ -117,4 +117,12 @@ public class TriadicClosureParser {
         TriadicClosureParser.parseMovies(args[0]);
         TriadicClosureParser.parseRatings(args[1]);
     }
+
+    public static HashMap<Integer, Map.Entry<String, List<String>>> getMovieID() {
+        return movies;
+    }
+
+    public static HashMap<Integer, List<Map.Entry<String,Double>>> getRatings() {
+        return ratings;
+    }
 }
