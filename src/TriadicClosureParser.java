@@ -115,6 +115,24 @@ class TriadicClosureParser {
         }
     }
 
+    public static void main(String[] args) {
+        if (args.length != 2) {
+            System.out.println("usage is: ");
+            System.out.println("     java Parser /path/to/data/movies.dat /path/to/data/ratings.dat");
+            System.out.println("have you setup your \"Run Configurations\"?");
+            return;
+        }
+        TriadicClosureParser.parseMovies(args[0]);
+        TriadicClosureParser.parseRatings(args[1]);
+    }
+
+    public static HashMap<Integer, Map.Entry<String, List<String>>> getMovieID() {
+        return movies;
+    }
+
+    public static HashMap<Integer, List<Map.Entry<String,Double>>> getRatings() {
+        return ratings;
+    }
 
    protected static Double getRatingOfMovie(String userID, String movieID) {
        List<Map.Entry<String, Double>> listOfRatedMovies = ratings.get(userID);
@@ -133,5 +151,4 @@ class TriadicClosureParser {
        return movies.get(movieID).getKey();
 
    }
-
 }
