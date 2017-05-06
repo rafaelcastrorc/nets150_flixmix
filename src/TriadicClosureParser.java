@@ -8,12 +8,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
-public class TriadicClosureParser {
+class TriadicClosureParser {
+
+    protected static HashMap<String, Map.Entry<String, List<String>>> getMovies() {
+        return movies;
+    }
+
+    protected static HashMap<String, List<Map.Entry<String, Double>>> getRatings() {
+        return ratings;
+    }
 
     // movieID -> Map.Entry={movie title, list of genres}
-    private static HashMap<Integer, Map.Entry<String, List<String>>> movies = new HashMap<Integer, Map.Entry<String, List<String>>>();
+    private static HashMap<String, Map.Entry<String, List<String>>> movies = new HashMap<>();
     // userID -> List<Entry={movie title, rating by user}>
-    private static HashMap<Integer, List<Map.Entry<String, Double>>> ratings = new HashMap<Integer, List<Map.Entry<String, Double>>>();
+    private static HashMap<String, List<Map.Entry<String, Double>>> ratings = new HashMap<>();
 
     /**
      * Parses the movies.dat file specified by the
@@ -46,9 +54,9 @@ public class TriadicClosureParser {
                 String genres = movieInfo[2];
                 String[] genresArray = genres.split("\\|");			// dataset uses "|" to separate genres of movie
                 Map.Entry<String, List<String>> entry =
-                        new AbstractMap.SimpleEntry<String, List<String>>(movie, Arrays.asList(genresArray));
+                        new AbstractMap.SimpleEntry<>(movie, Arrays.asList(genresArray));
 
-                movies.put(movieID, entry);
+                movies.put("m" + movieID, entry);
                 System.out.println(movieID + "::" + movie + "::" + Arrays.asList(genresArray).toString());
                 if (!sc.hasNextLine()) {
                     break;
@@ -78,23 +86,23 @@ public class TriadicClosureParser {
                 try {
                     userID = Integer.parseInt(ratingsInfo[0]);
                     movieID = Integer.parseInt(ratingsInfo[1]);
-                    movie = movies.get(movieID).getKey();
+                   // movie = movies.get(movieID).getKey();
                     rating = Double.parseDouble(ratingsInfo[2]);
                 }
                 catch (NumberFormatException e) {
                     e.printStackTrace();
                 }
-                if (!ratings.containsKey(userID)) {
+                if (!ratings.containsKey("u"+userID)) {
                     List<Map.Entry<String, Double>> list = new ArrayList<Map.Entry<String, Double>>();
-                    Map.Entry<String, Double> entry = new AbstractMap.SimpleEntry<String, Double>(movie, rating);
+                    Map.Entry<String, Double> entry = new AbstractMap.SimpleEntry<String, Double>("m"+movieID, rating);
                     list.add(entry);
-                    ratings.put(userID, list);
+                    ratings.put("u" + userID, list);
                 }
                 else {
-                    Map.Entry<String, Double> entry = new AbstractMap.SimpleEntry<String, Double>(movie, rating);
-                    ratings.get(userID).add(entry);
+                    Map.Entry<String, Double> entry = new AbstractMap.SimpleEntry<String, Double>("m" + movieID, rating);
+                    ratings.get("u"+userID).add(entry);
                 }
-//				System.out.println(userID + "::" + movieID + "::" + rating);
+				//System.out.println(userID + "::" + movieID + "::" + rating);
                 if (!sc.hasNextLine()) {
                     break;
                 }
@@ -125,4 +133,22 @@ public class TriadicClosureParser {
     public static HashMap<Integer, List<Map.Entry<String,Double>>> getRatings() {
         return ratings;
     }
+
+   protected static Double getRatingOfMovie(String userID, String movieID) {
+       List<Map.Entry<String, Double>> listOfRatedMovies = ratings.get(userID);
+       for (Map.Entry<String, Double> entry : listOfRatedMovies) {
+           String currMovie = entry.getKey();
+           Double rating = entry.getValue();
+           if (currMovie.equals(movieID)) {
+               return rating;
+           }
+
+       }
+       return null;
+   }
+
+   protected static String getMovieTitle(String movieID) {
+       return movies.get(movieID).getKey();
+
+   }
 }
